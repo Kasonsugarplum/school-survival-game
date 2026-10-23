@@ -216,7 +216,6 @@ function updateMonsters(dt) {
   for (const monster of monsters) {
     if (player.hiding) {
       monster.chill += dt;
-      const posPhase = Math.sin(monster.chill * 1.2);
       const driftX = Math.cos(monster.chill * 1.7) * 18;
       const driftY = Math.sin(monster.chill * 1.3) * 18;
       monster.x += driftX * dt;
@@ -256,89 +255,164 @@ function checkVictory() {
   }
 }
 
-function drawBackground() {
-  ctx.fillStyle = '#d6d3d1';
-  ctx.fillRect(0, 0, map.width, map.height);
+function draw3DWall(wall) {
+  const depth = 16;
+  const topHeight = 20;
 
-  ctx.fillStyle = '#f8fafc';
-  ctx.fillRect(0, 0, map.width, 24);
-  ctx.fillRect(0, map.height - 24, map.width, 24);
-  ctx.fillRect(0, 0, 24, map.height);
-  ctx.fillRect(map.width - 24, 0, 24, map.height);
+  ctx.fillStyle = '#64748b';
+  ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
 
-  for (const wall of walls) {
-    ctx.fillStyle = '#64748b';
-    ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-  }
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(wall.x + wall.w, wall.y, depth, wall.h);
 
-  ctx.fillStyle = '#a78bfa';
-  ctx.fillRect(90, 80, 38, 60);
-  ctx.fillRect(90, 260, 38, 60);
-  ctx.fillRect(90, 440, 38, 60);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(wall.x, wall.y - topHeight, wall.w + depth, topHeight);
 
-  ctx.fillStyle = '#fbbf24';
-  for (const item of collectibles) {
-    if (!item.found) {
-      ctx.beginPath();
-      ctx.moveTo(item.x, item.y - item.r);
-      ctx.lineTo(item.x + item.r, item.y);
-      ctx.lineTo(item.x, item.y + item.r);
-      ctx.lineTo(item.x - item.r, item.y);
-      ctx.closePath();
-      ctx.fill();
-    }
-  }
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillRect(wall.x + 4, wall.y + 4, wall.w - 8, 3);
+}
 
-  ctx.fillStyle = '#22c55e';
-  for (const spot of hideSpots) {
-    ctx.fillRect(spot.x, spot.y, spot.w, spot.h);
-    ctx.fillStyle = '#0f172a';
-    ctx.font = '12px Arial';
-    ctx.fillText(spot.name, spot.x + 4, spot.y + 18);
-    ctx.fillStyle = '#22c55e';
-  }
+function drawHideSpot(spot) {
+  const depth = 12;
+  const x = spot.x;
+  const y = spot.y;
+  const w = spot.w;
+  const h = spot.h;
 
+  ctx.fillStyle = '#2dd4bf';
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(x + w - 10, y + 6, 6, h - 12);
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '10px Arial';
+  ctx.fillText(spot.name, x + 4, y + 16);
+
+  ctx.fillStyle = '#0f766e';
+  ctx.fillRect(x + w, y, depth, h);
+  ctx.fillStyle = '#14b8a6';
+  ctx.fillRect(x, y - 12, w + depth, 12);
+}
+
+function drawCollectible(item) {
+  if (item.found) return;
+
+  const shadowY = item.y + 14;
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.25)';
+  ctx.beginPath();
+  ctx.ellipse(item.x, shadowY, 12, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.moveTo(item.x, item.y - item.r);
+  ctx.lineTo(item.x + item.r, item.y);
+  ctx.lineTo(item.x, item.y + item.r);
+  ctx.lineTo(item.x - item.r, item.y);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#fef3c7';
+  ctx.fillRect(item.x - 2, item.y - 8, 4, 14);
+}
+
+function drawExitDoor() {
   ctx.fillStyle = '#7c3aed';
   ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
   ctx.fillStyle = '#f8fafc';
   ctx.font = 'bold 18px Arial';
   ctx.fillText('EXIT', exitDoor.x + 10, exitDoor.y + 30);
 
-  ctx.fillStyle = '#0f172a';
-  ctx.font = 'bold 18px Arial';
-  ctx.fillText('Main Hall', 90, 30);
-  ctx.fillText('Library', 610, 40);
-  ctx.fillText('Classroom', 150, 240);
-  ctx.fillText('Gym', 750, 390);
+  ctx.fillStyle = '#4c1d95';
+  ctx.fillRect(exitDoor.x + exitDoor.w, exitDoor.y, 12, exitDoor.h);
+  ctx.fillStyle = '#6d28d9';
+  ctx.fillRect(exitDoor.x, exitDoor.y - 12, exitDoor.w + 12, 12);
 }
 
-function drawPlayer() {
+function drawGround() {
+  const groundGrad = ctx.createLinearGradient(0, 0, 0, map.height);
+  groundGrad.addColorStop(0, '#e2e8f0');
+  groundGrad.addColorStop(0.45, '#dfe4ea');
+  groundGrad.addColorStop(1, '#94a3b8');
+  ctx.fillStyle = groundGrad;
+  ctx.fillRect(0, 0, map.width, map.height);
+
+  for (let i = 0; i < 18; i++) {
+    const y = 120 + i * 28;
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.12)';
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(map.width, y + 30);
+    ctx.stroke();
+  }
+
+  for (let x = 0; x < map.width; x += 60) {
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.08)';
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + 60, map.height);
+    ctx.stroke();
+  }
+}
+
+function drawPlayerModel() {
+  const x = player.x;
+  const y = player.y;
+
   if (player.hiding) {
     ctx.fillStyle = '#0f172a';
-    ctx.fillRect(player.x - 16, player.y - 18, 32, 36);
+    ctx.fillRect(x - 16, y - 18, 32, 36);
     return;
   }
 
-  ctx.fillStyle = player.color;
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
   ctx.beginPath();
-  ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+  ctx.ellipse(x, y + 16, 18, 9, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(player.x - 3, player.y - 9, 6, 4);
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(x - 10, y - 14, 20, 20);
+  ctx.fillStyle = '#0ea5e9';
+  ctx.fillRect(x - 12, y - 14, 24, 6);
+  ctx.fillStyle = '#e0f2fe';
+  ctx.fillRect(x - 4, y - 8, 8, 8);
 }
 
-function drawMonsters() {
-  for (const monster of monsters) {
-    ctx.fillStyle = monster.color;
-    ctx.beginPath();
-    ctx.arc(monster.x, monster.y, monster.radius, 0, Math.PI * 2);
-    ctx.fill();
+function drawMonsterModel(monster) {
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+  ctx.beginPath();
+  ctx.ellipse(monster.x, monster.y + 16, 18, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-    ctx.fillStyle = '#111827';
-    ctx.fillRect(monster.x - 7, monster.y - 6, 4, 4);
-    ctx.fillRect(monster.x + 3, monster.y - 6, 4, 4);
+  ctx.fillStyle = monster.color;
+  ctx.fillRect(monster.x - 12, monster.y - 16, 24, 20);
+  ctx.fillStyle = '#7f1d1d';
+  ctx.fillRect(monster.x - 10, monster.y - 4, 6, 6);
+  ctx.fillRect(monster.x + 4, monster.y - 4, 6, 6);
+}
+
+function drawScene() {
+  drawGround();
+
+  for (const wall of walls) {
+    draw3DWall(wall);
   }
+
+  for (const spot of hideSpots) {
+    drawHideSpot(spot);
+  }
+
+  for (const item of collectibles) {
+    drawCollectible(item);
+  }
+
+  drawExitDoor();
+
+  for (const monster of monsters) {
+    drawMonsterModel(monster);
+  }
+
+  drawPlayerModel();
 }
 
 function drawStatusText() {
@@ -348,10 +422,8 @@ function drawStatusText() {
 }
 
 function render() {
-  drawBackground();
+  drawScene();
   drawStatusText();
-  drawPlayer();
-  drawMonsters();
 
   if (state.gameOver || state.victory) {
     ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
