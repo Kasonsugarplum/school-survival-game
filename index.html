@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>School Survival Escape</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="game-shell">
+      <div class="top-bar">
+        <div>
+          <h1>School Survival Escape</h1>
+        </div>
+        <div class="objective-panel">
+          <span id="objectiveText">Find the missing school codes and escape.</span>
+        </div>
+      </div>
+
+      <div class="hud">
+        <div class="bar-group">
+          <label>Stamina</label>
+          <div class="meter">
+            <div id="staminaBar" class="meter-fill stamina"></div>
+          </div>
+        </div>
+        <div class="bar-group">
+          <label>Threat</label>
+          <div class="meter">
+            <div id="threatBar" class="meter-fill danger"></div>
+          </div>
+        </div>
+      </div>
+
+      <canvas id="gameCanvas" width="960" height="600" aria-label="School escape game"></canvas>
+
+      <div class="controls">
+        <div><strong>Move:</strong> WASD / Arrow Keys</div>
+        <div><strong>Sprint:</strong> Shift</div>
+        <div><strong>Hide:</strong> E</div>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
